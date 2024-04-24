@@ -8,7 +8,7 @@ import { Address } from "~~/components/scaffold-eth";
 import { useEffect, useState } from "react";
 
 const backend_url = process.env.NEXT_PUBLIC_BACK_ENDPOINT;
-let selectedHash: string;
+// let selectedHash: string;
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
@@ -53,9 +53,10 @@ function ContractAddress() {
 
   const [data, setData] = useState<{ result: string[] }>();
   const [isLoading, setLoading] = useState(true);
+  const [selectedHash, setSelectedHash] = useState("");
 
   function handleHashChange(e:any) {
-    selectedHash = e.currentTarget.value;
+    setSelectedHash(e.currentTarget.value);
     // console.log(`selectedHash: ${selectedHash}`);
   }
 
@@ -69,7 +70,7 @@ function ContractAddress() {
     })
       .then(res => res.json())
       .then(data => {
-        selectedHash = "";
+        setSelectedHash("");
         console.log(`body: ${objCallBody}`);
         setData(data);
         setLoading(false);
@@ -95,7 +96,17 @@ function ContractAddress() {
       </div>
       <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
         <p>
-          
+          {
+            (selectedHash !== "") ? 
+              <div>
+                <div className="flex justify-center items-center space-x-2">
+                  <p className="my-2 font-medium">{selectedHash?.slice(0, 6) + "..." + selectedHash?.slice(-4)}</p>
+                </div>
+                <img src={"https://ipfs.io/ipfs/" + selectedHash} alt="" /> 
+              </div>
+            : <></>
+
+          }
         </p>
       </div>
     </div>
