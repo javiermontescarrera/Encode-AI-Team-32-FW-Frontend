@@ -7,7 +7,10 @@ import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Address } from "~~/components/scaffold-eth";
 import { useEffect, useState } from "react";
 
-const backend_url = process.env.NEXT_PUBLIC_BACK_ENDPOINT;
+// const backend_url = process.env.NEXT_PUBLIC_BACK_ENDPOINT;
+// const backend_url = `${window.location.protocol}//${window.location.hostname}:${process.env.NEXT_PUBLIC_BACKEND_PORT}`;
+const backend_url = `http://${window.location.hostname}:${process.env.NEXT_PUBLIC_BACKEND_PORT}`;
+
 // let selectedHash: string;
 
 const Home: NextPage = () => {
@@ -85,10 +88,10 @@ function ContractAddress() {
       <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
         <p className="mt-0 mb-0 font-medium">Patient Images:</p>
         <p>
-            {data.result.map((hash: string | undefined) => (
+            {data.result.reverse().map((ipfsHash: string | undefined) => (
               <span>
-                <input className="w-full" type="radio" value={hash} name="diagnoses" onChange={handleHashChange} />
-                {hash?.slice(0, 6) + "..." + hash?.slice(-4)}                
+                <input className="w-full" type="radio" value={ipfsHash} name="diagnoses" onChange={handleHashChange} />
+                {ipfsHash?.slice(0, 6) + "..." + ipfsHash?.slice(-4)}                
                 <br />
               </span>
             ))}
