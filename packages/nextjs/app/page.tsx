@@ -3,20 +3,21 @@
 import Link from "next/link";
 import type { NextPage } from "next";
 import { useAccount } from "wagmi";
-import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+// import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Address } from "~~/components/scaffold-eth";
+import { UploadImage } from "~~/components/UploadImage";
 import { useEffect, useState } from "react";
 
-// const backend_url = process.env.NEXT_PUBLIC_BACK_ENDPOINT;
-// const backend_url = `${window.location.protocol}//${window.location.hostname}:${process.env.NEXT_PUBLIC_BACKEND_PORT}`;
-const backend_url = `http://${window.location.hostname}:${process.env.NEXT_PUBLIC_BACKEND_PORT}`;
+// const BACKEND_URL = process.env.NEXT_PUBLIC_BACK_ENDPOINT;
+// const BACKEND_URL = `${window.location.protocol}//${window.location.hostname}:${process.env.NEXT_PUBLIC_BACKEND_PORT}`;
+const BACKEND_URL = `http://${window.location.hostname}:${process.env.NEXT_PUBLIC_BACKEND_PORT}`;
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
   const [contractAddress, setContractAddress] = useState();
 
   useEffect(() => {
-    fetch(backend_url + "/contract-address")
+    fetch(BACKEND_URL + "/contract-address")
       .then(res => res.json())
       .then(data => {
         setContractAddress(data.result);
@@ -66,7 +67,7 @@ function Diagnoses() {
   useEffect(() => {
     // const objCallBody = { patientAddress: connectedAddress }
     const objCallBody = { patientAddress: "0x8757c7D953ea058baCDF82717Caf403Bd01F1099" }
-    fetch(backend_url + "/get-patient-diagnoses", {
+    fetch(BACKEND_URL + "/get-patient-diagnoses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(objCallBody),
@@ -97,8 +98,16 @@ function Diagnoses() {
             ))}
         </p>
       </div>
+      {  
+        (selectedHash !== "") ? 
+          <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
+            <DiagnoseDetails selectedHash={selectedHash}/>
+          </div>
+        :
+        <></>
+      }
       <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-        <DiagnoseDetails selectedHash={selectedHash}/>
+        <UploadImage backend_url={BACKEND_URL} />
       </div>
     </div>
   );
@@ -128,7 +137,7 @@ function DiagnoseDetails(params: any) {
     const objBody = { diagnoseHash: params.selectedHash };
     // console.log(`objBody: ${JSON.stringify(objBody)}`);
 
-    fetch(backend_url + "/get-diagnose-details", {
+    fetch(BACKEND_URL + "/get-diagnose-details", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(objBody),
@@ -154,7 +163,7 @@ function DiagnoseDetails(params: any) {
             <div className="flex justify-center items-center space-x-2">
               <p className="my-2 font-medium">{trimmedHash}</p>
             </div>
-            <img src={"https://ipfs.io/ipfs/" + params.selectedHash} alt="" />
+            <img src={"https://ipfs.io/ipfs/" + params.selectedHash} alt="" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
           </>
           : <></>
         }
@@ -162,10 +171,11 @@ function DiagnoseDetails(params: any) {
           ((data.result) && params.selectedHash !== "") ? 
             <span>
               <p className="my-2 font-medium">Diagnose: {data.result[0]}</p>
-              <p className="my-2 font-medium">Registered on {new Date(Number(data.result[1]) * 1000).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true })}</p>
+              <p className="my-2 font-medium">Registered on {formatTimestamp(data.result[1])}</p>
             </span>
           : <></>
         }
+        
       </div>
     </p>
   );
