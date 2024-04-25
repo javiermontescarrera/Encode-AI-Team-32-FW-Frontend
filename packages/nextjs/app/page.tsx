@@ -74,23 +74,6 @@ function Diagnoses(params: any) {
   }
 
   useEffect(() => {
-    // const objCallBody = { patientAddress: connectedAddress }
-    const objCallBody = { patientAddress: "0x8757c7D953ea058baCDF82717Caf403Bd01F1099" }
-    fetch(BACKEND_URL + "/get-patient-diagnoses", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(objCallBody),
-    })
-      .then(res => res.json())
-      .then(data => {
-        setSelectedHash("");
-        console.log(`body: ${objCallBody}`);
-        setData(data);
-        setLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
     const objCallBody = { patientAddress: connectedAddress }
     // const objCallBody = { patientAddress: "0x8757c7D953ea058baCDF82717Caf403Bd01F1099" }
     fetch(BACKEND_URL + "/get-patient-diagnoses", {
