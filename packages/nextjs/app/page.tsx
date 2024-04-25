@@ -16,12 +16,22 @@ const AI_URL = `http://${window.location.hostname}:${process.env.NEXT_PUBLIC_AI_
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
   const [contractAddress, setContractAddress] = useState();
+  const [contractAbi, setContractAbi] = useState();
 
   useEffect(() => {
     fetch(BACKEND_URL + "/contract-address")
       .then(res => res.json())
       .then(data => {
         setContractAddress(data.result);
+        console.log(`Contract Address:${data.result}`);
+      });
+  }, []);
+
+  useEffect(() => {
+    fetch(BACKEND_URL + "/contract-abi")
+      .then(res => res.json())
+      .then(data => {
+        setContractAbi(data.result);
         console.log(`Contract Address:${data.result}`);
       });
   }, []);
@@ -42,7 +52,7 @@ const Home: NextPage = () => {
 
         <div className="flex-grow bg-base-300 w-full mt-16 px-8 py-12">
           {
-            (connectedAddress) ? <Diagnoses /> : <div></div>
+            (connectedAddress) ? <Diagnoses contractAddress={contractAddress} contractAbi={contractAbi} /> : <div></div>
           }
         </div>
       </div>
@@ -51,7 +61,7 @@ const Home: NextPage = () => {
 };
 
 
-function Diagnoses() {
+function Diagnoses(params: any) {
   const { address: connectedAddress } = useAccount();
 
   const [data, setData] = useState<{ result: string[] }>();
@@ -66,6 +76,23 @@ function Diagnoses() {
   useEffect(() => {
     // const objCallBody = { patientAddress: connectedAddress }
     const objCallBody = { patientAddress: "0x8757c7D953ea058baCDF82717Caf403Bd01F1099" }
+    fetch(BACKEND_URL + "/get-patient-diagnoses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(objCallBody),
+    })
+      .then(res => res.json())
+      .then(data => {
+        setSelectedHash("");
+        console.log(`body: ${objCallBody}`);
+        setData(data);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    const objCallBody = { patientAddress: connectedAddress }
+    // const objCallBody = { patientAddress: "0x8757c7D953ea058baCDF82717Caf403Bd01F1099" }
     fetch(BACKEND_URL + "/get-patient-diagnoses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -106,7 +133,11 @@ function Diagnoses() {
         <></>
       }
       <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-        <UploadImage backend_url={BACKEND_URL} ai_url={AI_URL}/>
+        <UploadImage 
+          backend_url={BACKEND_URL} ai_url={AI_URL} 
+          contractAddress={params.contractAddress} 
+          contractAbi={params.contractAbi} 
+        />
       </div>
     </div>
   );

@@ -1,10 +1,32 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+// import { useContractWrite, usePrepareContractWrite, useWaitForTransaction } from "wagmi";
+import { 
+  type BaseError, 
+  useWaitForTransactionReceipt, 
+  useWriteContract 
+} from 'wagmi';
 
 export function UploadImage(params: any) {
   // console.log(JSON.stringify(params));
+
+  // Wagmi new version====================================================================================
+  const { 
+    data: hash,
+    error,  
+    isPending, 
+    writeContract 
+  } = useWriteContract() 
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = 
+    useWaitForTransactionReceipt({ 
+      hash, 
+    })
+  // =====================================================================================================
+
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isLoading, setLoading] = useState(false);
   const [diagnose, setDiagnose] = useState("");
+  const [ipfsHash, setIpfsHash] = useState("");
 
   const handleGetDiagnose = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -28,13 +50,14 @@ export function UploadImage(params: any) {
         // AI bone fracture detection:
         fetch(`${params.ai_url}/object-detection/${data.result.filename}`)
         .then((response) => response.json())
-        .then((data) => {
-          console.log(`AI response: ${JSON.stringify(data)}`);
+        .then((aiData) => {
+          console.log(`AI response: ${JSON.stringify(aiData)}`);
 
-          setDiagnose(data.diagnose);
-          const objIPFSUploadBody = {imageName: data.outputFileName};
-          // console.log(`objIPFSUploadBody: ${JSON.stringify(objIPFSUploadBody)}`);
+          setDiagnose(aiData.diagnose);
+          const objIPFSUploadBody = {imageName: aiData.outputFileName};
+          console.log(`objIPFSUploadBody: ${JSON.stringify(objIPFSUploadBody)}`);
 
+          // Uploading the resulting analyzed image to IPFS:
           fetch(`${params.backend_url}/upload-to-ipfs`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -42,28 +65,57 @@ export function UploadImage(params: any) {
           })
             .then(res => res.json())
             .then(ipfsData => {
-              setLoading(false);
-              
               console.log(`IPFS response: ${JSON.stringify(ipfsData)}`);
+              setIpfsHash(ipfsData.result.IpfsHash);
+              setLoading(false);
+              // write?.();
 
-              // ipfsData.IpfsHash
-
+              console.log(`ipfsData.IpfsHash> ${ipfsData.result.IpfsHash}`);
+              console.log(`aiData.diagnose> ${aiData.diagnose}`);
+              writeContract({ 
+                address: `${params.contractAddress}`, 
+                abi: params.contractAbi, 
+                functionName: 'recordDiagnose', 
+                args: [ipfsData.result.IpfsHash, aiData.diagnose], 
+              })
             });
         });
-
-        
-        
-        ;
-        // console.log(`AI response: ${JSON.stringify(aiResponse)}`);
-
-        // if (!aiResponse.ok) {
-        //   throw new Error(`API request failed with status ${aiResponse.status}`);
-        // }
-
-        // const aidata = await aiResponse.json();
-        // console.log(`AI data: ${JSON.stringify(aidata)}`);
       });
   };
+
+  // Wagmi call ==========================================================================================
+  // const {
+  //   config: config,
+  //   error: prepareError,
+  //   isError: isPrepareError,
+  // } = usePrepareContractWrite({
+  //   address: `${params.contracAddress}`,
+  //   abi: params.contractAbi,
+  //   functionName: "recordDiagnose",
+  //   args: [ipfsHash.toString(), diagnose.toString()],
+  //   enabled: true,
+  // });
+
+  // const { data: data, error: error, isError: isError, write: write } = useContractWrite(config);
+  // const { isLoading: isLoading, isSuccess: isSuccess } = useWaitForTransaction({
+  //   hash: data?.hash,
+  // });
+
+  // if (isPrepareError) {
+  //   console.log(`PrepareError: ${prepareError?.message}`);
+  // }
+  // if (isError) {
+  //   console.log(`Error: ${error?.message}`);
+  // }
+  // if (isLoading) console.log("Executing maintenance task");
+  // if (isSuccess) {
+  //   console.log("Execute task successful");
+  //   setTimeout(() => {
+  //     window.parent.location = window.parent.location.href;
+  //   }, 2000);
+  // }
+  // =====================================================================================================
+
 
   const handleNewDiagnose = (event: any) => {
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
@@ -83,9 +135,19 @@ export function UploadImage(params: any) {
           onChange={handleGetDiagnose}
         />
         {selectedImage && <p>Selected image: {selectedImage.name}</p>}
-        <button className="btn btn-primary" onClick={handleNewDiagnose}>
-          Add Image
+        <button 
+          className="btn btn-primary"
+          disabled={isPending} 
+          onClick={handleNewDiagnose}>
+          {isPending ? 'Adding to the blockchain...' : 'Add Image'}
         </button>
+
+        {hash && <div>Transaction Hash: {hash}</div>}
+        {isConfirming && <div>Waiting for confirmation...</div>} 
+        {isConfirmed && <div>Transaction confirmed.</div>}  
+        {error && ( 
+          <div>Error: {(error as BaseError).shortMessage || error.message}</div> 
+        )}
       </div>
     </>
   );
