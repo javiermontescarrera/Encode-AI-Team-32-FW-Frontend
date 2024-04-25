@@ -4,6 +4,7 @@ export function UploadImage(params: any) {
   // console.log(JSON.stringify(params));
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isLoading, setLoading] = useState(false);
+  const [diagnose, setDiagnose] = useState("");
 
   const handleGetDiagnose = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -28,10 +29,26 @@ export function UploadImage(params: any) {
         fetch(`${params.ai_url}/object-detection/${data.result.filename}`)
         .then((response) => response.json())
         .then((data) => {
-          setLoading(false);
           console.log(`AI response: ${JSON.stringify(data)}`);
 
-          
+          setDiagnose(data.diagnose);
+          const objIPFSUploadBody = {imageName: data.outputFileName};
+          // console.log(`objIPFSUploadBody: ${JSON.stringify(objIPFSUploadBody)}`);
+
+          fetch(`${params.backend_url}/upload-to-ipfs`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(objIPFSUploadBody),
+          })
+            .then(res => res.json())
+            .then(ipfsData => {
+              setLoading(false);
+              
+              console.log(`IPFS response: ${JSON.stringify(ipfsData)}`);
+
+              // ipfsData.IpfsHash
+
+            });
         });
 
         
