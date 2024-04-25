@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 // const BACKEND_URL = process.env.NEXT_PUBLIC_BACK_ENDPOINT;
 // const BACKEND_URL = `${window.location.protocol}//${window.location.hostname}:${process.env.NEXT_PUBLIC_BACKEND_PORT}`;
 const BACKEND_URL = `http://${window.location.hostname}:${process.env.NEXT_PUBLIC_BACKEND_PORT}`;
+const AI_URL = `http://${window.location.hostname}:${process.env.NEXT_PUBLIC_AI_PORT}`;
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
@@ -56,8 +57,6 @@ function Diagnoses() {
   const [data, setData] = useState<{ result: string[] }>();
   const [isLoading, setLoading] = useState(true);
   const [selectedHash, setSelectedHash] = useState("");
-  const [diagnoseDetailsData, setDiagnoseDetailsData] = useState<{ result: object }>();
-  const [isdiagnoseDetailsLoading, setDiagnoseDetailsLoading] = useState(true);
   
   function handleHashChange(e:any) {
     setSelectedHash(e.currentTarget.value);
@@ -107,7 +106,7 @@ function Diagnoses() {
         <></>
       }
       <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-        <UploadImage backend_url={BACKEND_URL} />
+        <UploadImage backend_url={BACKEND_URL} ai_url={AI_URL}/>
       </div>
     </div>
   );

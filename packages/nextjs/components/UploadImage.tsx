@@ -1,26 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function UploadImage(params: any) {
   // console.log(JSON.stringify(params));
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [isLoading, setLoading] = useState(false);
 
   const handleGetDiagnose = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setLoading(true);
     setSelectedImage(file);
 
     const formData = new FormData();
     formData.append('image', file);
 
-    fetch(params.backend_url + "/upload-image", {
+    fetch(`${params.backend_url}/upload-image`, {
       method: "POST",
       body: formData,
     })
       .then(res => res.json())
-      .then(data => {
-        console.log(`Response: ${JSON.stringify(data.result)}`);
+      .then(async data => {
         setSelectedImage(null);
+        console.log(`Upload response: ${JSON.stringify(data.result)}`);
+
+        // AI bone fracture detection:
+        fetch(`${params.ai_url}/object-detection/${data.result.filename}`)
+        .then((response) => response.json())
+        .then((data) => {
+          setLoading(false);
+          console.log(`AI response: ${JSON.stringify(data)}`);
+
+          
+        });
+
+        
+        
+        ;
+        // console.log(`AI response: ${JSON.stringify(aiResponse)}`);
+
+        // if (!aiResponse.ok) {
+        //   throw new Error(`API request failed with status ${aiResponse.status}`);
+        // }
+
+        // const aidata = await aiResponse.json();
+        // console.log(`AI data: ${JSON.stringify(aidata)}`);
       });
   };
 
@@ -28,6 +52,8 @@ export function UploadImage(params: any) {
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     fileInput.click();
   }
+
+  if (isLoading) return <p>Processing uploaded image...</p>;
 
   return (
     <>
